@@ -24,6 +24,7 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <string.h>
 
 
 /* vfork is available under AIX (and others?), but only with -lbsd */
@@ -48,19 +49,19 @@ FILE	**To, **From;
 
     if (pipe (P1) == -1) {
         if (QiDebug)
-	    fprintf(stderr, "PipeQi: Pipe(1): %s\r\n", sys_errlist[errno]);
+	    fprintf(stderr, "PipeQi: Pipe(1): %s\r\n", strerror(errno));
 	syslog(LOG_ERR, "PipeQi: pipe(1): %m");
 	return(-1);
 	}
     if (pipe (P2) == -1) {
         if (QiDebug)
-	    fprintf(stderr, "PipeQi: Pipe(2): %s\r\n", sys_errlist[errno]);
+	    fprintf(stderr, "PipeQi: Pipe(2): %s\r\n", strerror(errno));
 	syslog(LOG_ERR, "PipeQi: pipe(2): %m");
 	return(-1);
 	}
     if ((Pid = vfork()) == -1) {
         if (QiDebug)
-	    fprintf(stderr, "PipeQi: vfork(): %s\r\n", sys_errlist[errno]);
+	    fprintf(stderr, "PipeQi: vfork(): %s\r\n", strerror(errno));
 	syslog(LOG_ERR, "PipeQi: vfork(): %m");
 	return(-1);
 	}
@@ -69,25 +70,25 @@ FILE	**To, **From;
 	/* Close and dup, close and dup */
 	if (close (0) == -1) {
             if (QiDebug)
-	        fprintf(stderr, "PipeQi: close(0): %s\r\n", sys_errlist[errno]);
+	        fprintf(stderr, "PipeQi: close(0): %s\r\n", strerror(errno));
 	    syslog(LOG_ERR, "PipeQi: close(0): %m");
 	    return(-1);
 	}
 	if (fcntl (P1[0], F_DUPFD, 0) == -1) {
             if (QiDebug)
-	        fprintf(stderr, "PipeQi: fcntl(0): %s\r\n", sys_errlist[errno]);
+	        fprintf(stderr, "PipeQi: fcntl(0): %s\r\n", strerror(errno));
 	    syslog(LOG_ERR, "PipeQi: fcntl(0): %m");
 	    return(-1);
 	}
 	if (close (1) == -1) {
             if (QiDebug)
-	        fprintf(stderr, "PipeQi: close(1): %s\r\n", sys_errlist[errno]);
+	        fprintf(stderr, "PipeQi: close(1): %s\r\n", strerror(errno));
 	    syslog(LOG_ERR, "PipeQi: close(1): %m");
 	    return(-1);
 	}
 	if (fcntl (P2[1], F_DUPFD, 1) == -1) {
             if (QiDebug)
-	        fprintf(stderr, "PipeQi: fcntl(1): %s\r\n", sys_errlist[errno]);
+	        fprintf(stderr, "PipeQi: fcntl(1): %s\r\n", strerror(errno));
 	    syslog(LOG_ERR, "PipeQi: fcntl(1): %m");
 	    return(-1);
 	}
@@ -102,22 +103,22 @@ FILE	**To, **From;
 	execl (LocalQi, "qi", "-q", CPNULL);
 	if (QiDebug)
 	    fprintf(stderr, "%s %s \r\nexecl failed: %s\r\n",
-					LocalQi, "qi -q", sys_errlist[errno]);
-	syslog(LOG_ERR, "%s execl: %s", LocalQi, sys_errlist[errno]);
+					LocalQi, "qi -q", strerror(errno));
+	syslog(LOG_ERR, "%s execl: %s", LocalQi, strerror(errno));
 	return(-1);
     }
 
     /* Assign stream descriptors to pipe components */
     if ((*To = fdopen (P1[1], "w")) == FILE_NULL) {
         if (QiDebug)
-	    fprintf(stderr, "PipeQi: fdopen(To): %s\r\n", sys_errlist[errno]);
+	    fprintf(stderr, "PipeQi: fdopen(To): %s\r\n", strerror(errno));
 	syslog(LOG_ERR, "PipeQi: fdopen(To): %m");
 	return(-1);
 	}
     if ((*From = fdopen (P2[0], "r")) == FILE_NULL) {
         if (QiDebug)
 	    fprintf(stderr, "PipeQi: fdopen(From): %s\r\n",
-							sys_errlist[errno]);
+							strerror(errno));
 	syslog(LOG_ERR, "PipeQi: fdopen(From): %m");
 	return(-1);
 	}

@@ -18,7 +18,7 @@ Install build deps:
 
 ```bash
 sudo apt update
-sudo apt install -y build-essential perl flex bison bc libgdbm-dev
+sudo apt install -y build-essential perl flex bison bc libgdbm-dev libgdbm-compat-dev libfl-dev
 ```
 
 Build and install:

@@ -59,6 +59,8 @@ static char  RcsId[] = "@(#)$Id: OpenQi.c,v 1.8 1995/06/10 04:05:31 p-pomes Exp 
 
 #include "qiapi.h"
 #include <netdb.h>
+#include <errno.h>
+#include <string.h>
 #include <syslog.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -109,7 +111,7 @@ FILE 	**To, **From;
       }
     } else if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
 	if (QiDebug)
-	    fprintf(stderr, "OpenQi: socket(): %s\r\n", sys_errlist[errno]);
+	    fprintf(stderr, "OpenQi: socket(): %s\r\n", strerror(errno));
 	syslog(LOG_ERR, "OpenQi: socket(): %m");
 	return(-1);
     }
@@ -120,7 +122,7 @@ FILE 	**To, **From;
     else {
 	if (QiDebug)
 	    fprintf(stderr, "OpenQi: gethostbyname(%s): %s\r\n",
-	      Host, sys_errlist[errno]);
+	      Host, strerror(errno));
 	syslog(LOG_ERR, "OpenQi: gethostbyname(%s): %m", Host);
 	return(-1);
     }
@@ -129,7 +131,7 @@ FILE 	**To, **From;
     if (connect (sock, (struct sockaddr *) &Qi, sizeof (Qi)) < 0) {
 	if (QiDebug)
 	    fprintf(stderr, "OpenQi: connect(%s): %s\r\n",
-	      Host, sys_errlist[errno]);
+	      Host, strerror(errno));
 	syslog(LOG_ERR, "OpenQi: connect(%s): %m", Host);
 	(void) close(sock);
 	return (-1);

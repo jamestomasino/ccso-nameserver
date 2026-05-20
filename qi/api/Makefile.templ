@@ -48,7 +48,7 @@ LFLAGS	= _Lflags_
 SRCS=	cryptit.c fcrypt.c CloseQi.c FreeQIR.c OpenQi.c PipeQi.c FieldOps.c ReadQi.c LoginQi.c
 OBJS=	cryptit.o fcrypt.o CloseQi.o FreeQIR.o OpenQi.o PipeQi.o FieldOps.o ReadQi.o LoginQi.o
 OTHERS	= 
-BINS	= libqiapi.a _LibDir_/libqiapi.a apitest
+BINS	= libqiapi.a _LibDir_/libqiapi.a
 
 all:_Para_ $(BINS)
 ######################################################################
@@ -63,9 +63,6 @@ _LibDir_/libqiapi.a: libqiapi.a
 	rm -f $@
 	cp libqiapi.a $@
 	_Ranlib_ $@
-
-apitest:_Para_ apitest.c
-	$(CC) $(CFLAGS) $(LFLAGS) -o apitest apitest.c libqiapi.a _MoreLib_
 
 ######################################################################
 # standard targets

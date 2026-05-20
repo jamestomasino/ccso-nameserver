@@ -1,8 +1,9 @@
 @Features = ("ID_FALLBACK","EMAIL_AUTH", "CLEAR_AUTH");
 
 $CC = "cc -std=c99 -D_POSIX_C_SOURCE -I/usr/include/gdbm -lgdbm -lgdbm_compat";
+$Lex = "flex";
 $Cflags .= "  -DWAIT_INT";
-$MoreLib = "-ll";		# need the lex library
+$MoreLib = "-lfl";		# need the lex/flex library
 
 $Owner = "root";
 $Group = "root";

@@ -101,7 +101,7 @@ GetFields(ToQi, FromQi)
 	syslog(LOG_ERR, "GetFields: malloc(%d): %m", FINC * sizeof(QIF));
 	if (QiDebug)
 	    fprintf(stderr, "GetFields: malloc(%d): %s\r\n",
-	      FINC * sizeof(QIF), sys_errlist[errno]);
+	      FINC * sizeof(QIF), strerror(errno));
 	return(QIF_NULL);
     }
     memset((char *) Fields, (char)0, (FINC * sizeof(QIF)));
@@ -147,7 +147,7 @@ GetFields(ToQi, FromQi)
 		  (num + FINC) * sizeof(QIF));
 		if (QiDebug)
 		    fprintf(stderr, "GetFields: realloc(%d): %s\r\n",
-		      (num + FINC) * sizeof(QIF), sys_errlist[errno]);
+		      (num + FINC) * sizeof(QIF), strerror(errno));
 		return(QIF_NULL);
 	    }
 	    limit = num + FINC;
