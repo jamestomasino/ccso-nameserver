@@ -18,7 +18,7 @@ Install build deps:
 
 ```bash
 sudo apt update
-sudo apt install -y build-essential perl flex bison bc libgdbm-dev libgdbm-compat-dev libfl-dev
+sudo apt install -y build-essential perl flex bison bc dc libgdbm-dev libgdbm-compat-dev libfl-dev
 ```
 
 Build and install:
@@ -26,6 +26,7 @@ Build and install:
 ```bash
 ./ccso build
 ./ccso install-primes
+sudo mkdir -p /opt/nameserv/bin /opt/nameserv/db /opt/nameserv/help /opt/nameserv/util/db
 ./ccso install
 ```
 

@@ -20,14 +20,10 @@ echo "Executing build..."
 ./bin/build -s prod-new
 
 echo "Moving database into place..."
-mv prod-new.bdx db/prod.bdx
-mv prod-new.bnr db/prod.bnr
-mv prod-new.dir db/prod.dir
-mv prod-new.dov db/prod.dov
-mv prod-new.idx db/prod.idx
-mv prod-new.iov db/prod.iov
-mv prod-new.lck db/prod.lck
-mv prod-new.seq db/prod.seq
-mv prod-new.cnf db/prod.cnf
+for ext in bdx bnr dir dov idx iov lck seq cnf; do
+    if [ -f "prod-new.$ext" ]; then
+        mv "prod-new.$ext" "db/prod.$ext"
+    fi
+done
 
 echo "Book database build script complete."
