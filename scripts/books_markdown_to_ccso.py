@@ -110,7 +110,7 @@ def make_record(index: int, md_file: Path) -> str | None:
         (5, numeric_id(index, fm)),
         (6, short_alias(fm)),
         (3, title),
-        (4, "book review"),
+        (4, "person book review"),
         (60, title),
     ]
 
