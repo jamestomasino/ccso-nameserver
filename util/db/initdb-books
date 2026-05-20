@@ -1,0 +1,33 @@
+#!/bin/sh
+# Build a book-review oriented CCSO database from books.input/books.cnf.
+
+echo "Book database build script started..."
+cd /opt/nameserv
+
+cp util/db/books.cnf prod-new.cnf
+cp util/db/books.input qi.input
+
+echo "Calculating size..."
+size=`./bin/sizedb prod-new.cnf qi.input`
+
+echo "Executing credb..."
+./bin/credb $size prod-new
+echo "Executing maked..."
+./bin/maked prod-new <qi.input
+echo "Executing makei..."
+./bin/makei prod-new
+echo "Executing build..."
+./bin/build -s prod-new
+
+echo "Moving database into place..."
+mv prod-new.bdx db/prod.bdx
+mv prod-new.bnr db/prod.bnr
+mv prod-new.dir db/prod.dir
+mv prod-new.dov db/prod.dov
+mv prod-new.idx db/prod.idx
+mv prod-new.iov db/prod.iov
+mv prod-new.lck db/prod.lck
+mv prod-new.seq db/prod.seq
+mv prod-new.cnf db/prod.cnf
+
+echo "Book database build script complete."

@@ -1,55 +1,66 @@
 #!/usr/bin/env bash
 
-cd $(dirname "$0")
+set -euo pipefail
 
-case $1 in
+cd "$(dirname "$0")"
+cmd="${1:-}"
+
+case "$cmd" in
     build)
-        echo "Building ccso docker image"
+        echo "Configuring and building qi for Debian host install"
         set -x
-        docker build -t ccso -f Dockerfile .
+        cd qi
+        ./Configure centos7
+        make
         ;;
-    initdb)
-        echo "Initializing ccso database volume"
+    initdb-books)
+        echo "Initializing books profile under /opt/nameserv/db"
         set -x
-        docker run -it --rm -v ccso:/opt/nameserv/db ccso /opt/nameserv/util/db/initdb
-        ;;
-    shell)
-        echo "Launching bash shell in docker container"
-        set -x
-        docker run -it --rm -v ccso:/opt/nameserv/db ccso /bin/bash
+        /opt/nameserv/util/db/initdb-books
         ;;
     ph)
         echo "Launching ph client in interactive mode"
         echo "Don't forget to specify the server host with '-s hostname'"
         set -x
-        docker run -it --rm ccso /opt/nameserv/bin/ph ${@:2}
+        /opt/nameserv/bin/ph "${@:2}"
         ;;
     qi)
         echo "Connecting to qi server in local admin mode"
         set -x
-        docker run -it --rm -v ccso:/opt/nameserv/db ccso /opt/nameserv/bin/qi ${@:2}
-        ;;
+        /opt/nameserv/bin/qi "${@:2}"
+    ;;
     daemon)
-        # The service will pipe stdout over network so we don't want to echo anything extra
-        docker run -i --rm -a stdin -a stdout -v ccso:/opt/nameserv/db ccso /opt/nameserv/bin/qi -d -q
+        /opt/nameserv/bin/qi -d -q
         ;;
-    install-service)
-        echo "Installing systemd network service files"
+    install)
+        echo "Installing qi/ph binaries and docs into /opt/nameserv"
         set -x
-        install systemd/ccso.socket /etc/systemd/system/ccso.socket
-        install systemd/ccso@.service /etc/systemd/system/ccso@.service
-        systemctl enable ccso.socket
-        systemctl start ccso.socket
+        cd qi
+        sudo make install
+        sudo cp -r help /opt/nameserv/help
+        sudo install -m 0644 doc/ph.1 /usr/share/man/man1/ph.1
+        sudo install -m 0644 doc/qi.8 /usr/share/man/man8/qi.8
+        sudo mkdir -p /opt/nameserv/util/db
+        sudo install -m 0644 ../util/db/books.cnf /opt/nameserv/util/db/books.cnf
+        sudo install -m 0644 ../util/db/books.input /opt/nameserv/util/db/books.input
+        sudo install -m 0755 ../util/db/initdb-books /opt/nameserv/util/db/initdb-books
+        ;;
+    install-primes)
+        echo "Building/installing legacy 'primes' helper used by sizedb"
+        set -x
+        cd util/primes
+        make primes
+        sudo make install
         ;;
     *)
         echo "Unrecognized command, must be one of the following:"
-        echo "  build            : Build the docker container"
-        echo "  initdb           : Initialize the ccso database inside of a volume"
-        echo "  shell            : Launch a bash shell into the container"
+        echo "  build            : Configure and compile qi locally"
+        echo "  install          : Install qi/ph under /opt/nameserv"
+        echo "  install-primes   : Build/install util/primes helper"
+        echo "  initdb-books     : Initialize the book-review db"
         echo "  ph               : Launch the ph client"
         echo "  qi               : Launch the qi server in local hero mode"
-        echo "  daemon           : Launch the qi server in daemon mode (for connecting to inetd)"
-        echo "  install-service  : Install the systemd service files"
+        echo "  daemon           : Launch the qi server in inetd daemon mode"
         exit 1
         ;;
 esac

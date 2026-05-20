@@ -1,0 +1,22 @@
+######################################################################
+# Book review database schema for CCSO nameserver.
+# Format:
+#   field_id:name:length:description:flags:options...
+######################################################################
+6:alias:32:Stable short key for each book entry.:O:Indexed:Lookup:Public:Default:ForcePub:
+3:name:256:Display title used by legacy clients.:O:Indexed:Lookup:Public:Default:
+4:type:80:Entry type.:O:Lookup:Public:Default:
+5:id:16:Unique numeric id.:O:Indexed:Lookup:Public:
+
+60:title:256:Book title.:O:Indexed:Lookup:Public:Default:
+61:author:256:Author name(s).:O:Indexed:Lookup:Public:Default:
+62:year:8:Publication year.:O:Indexed:Lookup:Public:Default:
+63:isbn:32:ISBN (10 or 13).:O:Indexed:Lookup:Public:
+64:publisher:128:Publisher.:O:Lookup:Public:
+65:genre:128:Genre/category.:O:Indexed:Lookup:Public:Default:
+66:tags:256:Search tags separated by commas.:O:Indexed:Lookup:Public:Default:
+67:rating:8:Personal rating (for example 4.5/5).:O:Indexed:Lookup:Public:Default:
+68:status:24:Reading status (read, reading, paused, planned).:O:Indexed:Lookup:Public:Default:
+69:date_read:16:Date finished (YYYY-MM-DD).:O:Lookup:Public:
+70:review:4095:Review notes.:O:Lookup:Public:Default:
+71:link:256:Reference URL (Goodreads, publisher, notes).:O:Lookup:Public:
