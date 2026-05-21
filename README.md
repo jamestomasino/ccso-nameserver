@@ -131,8 +131,13 @@ python3 scripts/books_markdown_to_ccso.py
 Typical server refresh flow:
 
 ```bash
-python3 scripts/books_markdown_to_ccso.py
-sudo /opt/nameserv/util/db/initdb-books
+sudo ./scripts/rebuild_books_db.sh
+```
+
+Optional explicit markdown source path:
+
+```bash
+sudo ./scripts/rebuild_books_db.sh ~/sync/syncthing/wiki/books
 ```
 
 Yes: `initdb-books` performs a full rebuild of the CCSO database files each run.
