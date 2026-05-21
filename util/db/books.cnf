@@ -3,8 +3,8 @@
 # Format:
 #   field_id:name:length:description:flags:options...
 ######################################################################
-6:alias:32:Stable short key for each book entry.:O:Indexed:Lookup:Public:Default:ForcePub:
-3:name:256:Display title used by legacy clients.:O:Indexed:Lookup:Public:Default:
+6:alias:32:Stable short key for each book entry.:O:Indexed:Lookup:Public:ForcePub:
+3:name:256:Display title used by legacy clients.:O:Indexed:Lookup:
 4:type:80:Entry type.:O:Lookup:Public:Default:
 5:id:16:Unique numeric id.:O:Indexed:Lookup:Public:
 
