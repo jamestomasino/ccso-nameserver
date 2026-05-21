@@ -270,6 +270,35 @@ def emit_markdown(frontmatter: dict[str, object], review: str) -> str:
     return "\n".join(lines)
 
 
+def parse_frontmatter(md_path: Path) -> dict[str, str]:
+    data: dict[str, str] = {}
+    lines = md_path.read_text(encoding="utf-8").splitlines()
+    if not lines or lines[0].strip() != "---":
+        return data
+    for line in lines[1:]:
+        if line.strip() == "---":
+            break
+        if ":" not in line:
+            continue
+        k, v = line.split(":", 1)
+        key = k.strip()
+        val = v.strip().strip('"').strip("'")
+        data[key] = val
+    return data
+
+
+def build_existing_title_map(output_dir: Path) -> dict[str, dict[str, str]]:
+    title_map: dict[str, dict[str, str]] = {}
+    for md in output_dir.glob("*.md"):
+        if md.name == "index.md":
+            continue
+        fm = parse_frontmatter(md)
+        title = (fm.get("title") or "").strip().lower()
+        if title:
+            title_map[title] = fm
+    return title_map
+
+
 def main() -> None:
     args = parse_args()
     args.input_path = args.input_path.expanduser().resolve()
@@ -280,6 +309,7 @@ def main() -> None:
     no_review = 0
 
     source_kind, rows = load_input_rows(args.input_path)
+    existing_by_title = build_existing_title_map(args.output_dir) if source_kind == "review_json" else {}
     if source_kind == "csv":
         for row in rows:
             fm = create_frontmatter(row)  # type: ignore[arg-type]
@@ -293,6 +323,11 @@ def main() -> None:
     else:
         for idx, row in enumerate(rows, start=1):
             fm, review = create_frontmatter_from_review_row(row, f"{idx:04d}")
+            existing = existing_by_title.get(str(fm.get("title", "")).strip().lower())
+            if existing:
+                for key in ("author", "year", "isbn13", "isbn10", "publisher", "binding", "pages", "goodreads_id"):
+                    if not fm.get(key):
+                        fm[key] = existing.get(key, "")
             if not review:
                 no_review += 1
             out_name = f"{fm['id']}.md"
