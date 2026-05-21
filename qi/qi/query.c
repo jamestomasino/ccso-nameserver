@@ -75,6 +75,7 @@ static int DirMatch __P((QDIR, int, char *, int, int));
 static ARG *GetAllFields ();
 static ARG *getplusAlways __P((ARG *));
 static ARG *GetPrintDefaults ();
+static void NormalizeQueryValue __P((char *));
 static void LimitTime __P((int));
 static void LimitHit __P((int));
 static int PrintFields __P((INT32 *, ARG *, int));
@@ -142,6 +143,7 @@ ValidQuery(argp, cmd)
 			if ((fd = FindFD(argp->aFirst)) &&
 			    ! (fd->fdLocalPub && !LocalUser))
 			{
+				NormalizeQueryValue(argp->aSecond);
 				if (CanLookup(fd, argp->aSecond))
 				{
 					argp->aKey = fd->fdIndexed && (fd->fdLookup || AmHero || AmOpr) &&
@@ -224,6 +226,9 @@ ValidQuery(argp, cmd)
 			DoReply(-LR_SYNTAX, "Argument %d (begins %s): must be field=value pair.", count, argp->aFirst);
 		} else
 		{
+			if (cmd == C_QUERY && argp->aType == VALUE &&
+			    (!stricmp(argp->aFirst, "all") || !strcmp(argp->aFirst, "*")))
+				continue;
 			if ((fd = FindFD(argp->aFirst)) &&
 			    ! (fd->fdLocalPub && !LocalUser))
 			{
@@ -236,6 +241,7 @@ ValidQuery(argp, cmd)
 					free(argp->aSecond);
 					argp->aSecond = strdup(decrypted);
 				}
+				NormalizeQueryValue(argp->aSecond);
 			} else
 			{
 				DoReply(-LR_FIELD, "%s:unknown field.", argp->aFirst);
@@ -246,6 +252,27 @@ ValidQuery(argp, cmd)
 
       giveUp:
 	return (haveError ? 0 : keyCount);
+}
+
+/*
+ * Accept values quoted by PH/Gopher form clients: title="Dune"
+ */
+static void
+NormalizeQueryValue(value)
+	char *value;
+{
+	size_t len;
+
+	if (!value)
+		return;
+	len = strlen(value);
+	if (len >= 2 &&
+	    ((value[0] == '"' && value[len - 1] == '"') ||
+	     (value[0] == '\'' && value[len - 1] == '\'')))
+	{
+		memmove(value, value + 1, len - 2);
+		value[len - 2] = '\0';
+	}
 }
 
 /*

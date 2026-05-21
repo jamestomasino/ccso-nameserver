@@ -189,3 +189,5 @@ python3 scripts/books_markdown_to_ccso.py /path/to/books-markdown /path/to/books
 ## Notes
 
 - If `qi` is served by inetd, keep it in `-d -q` mode for clean protocol I/O.
+- Query compatibility: this fork accepts common PH/Lynx style inputs including
+  `return all` and quoted values such as `title="Dune"`.
