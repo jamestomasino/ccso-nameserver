@@ -287,6 +287,16 @@ def parse_frontmatter(md_path: Path) -> dict[str, str]:
     return data
 
 
+def parse_markdown_body(md_path: Path) -> str:
+    text = md_path.read_text(encoding="utf-8")
+    if not text.startswith("---\n"):
+        return text.strip()
+    parts = text.split("\n---\n", 1)
+    if len(parts) != 2:
+        return ""
+    return parts[1].strip()
+
+
 def build_existing_title_map(output_dir: Path) -> dict[str, dict[str, str]]:
     title_map: dict[str, dict[str, str]] = {}
     for md in output_dir.glob("*.md"):
@@ -328,6 +338,12 @@ def main() -> None:
                 for key in ("author", "year", "isbn13", "isbn10", "publisher", "binding", "pages", "goodreads_id"):
                     if not fm.get(key):
                         fm[key] = existing.get(key, "")
+                if not review:
+                    existing_id = existing.get("id", "")
+                    if existing_id:
+                        existing_path = args.output_dir / f"{existing_id}.md"
+                        if existing_path.exists():
+                            review = parse_markdown_body(existing_path)
             if not review:
                 no_review += 1
             out_name = f"{fm['id']}.md"
