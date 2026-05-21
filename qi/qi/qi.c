@@ -49,6 +49,7 @@ static char  RcsId[] = "@(#)$Id: qi.c,v 1.80 1995/06/23 19:24:38 p-pomes Exp $";
 #include <signal.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <arpa/inet.h>
 
 FILE	*Input, *Output;
 int	Daemon = 0;
@@ -287,8 +288,8 @@ SetSignals()
 static void
 WhoAreYou()
 {
-	struct sockaddr From;
-	int	i, FromLen = sizeof (From);
+	struct sockaddr_storage From;
+	socklen_t FromLen = sizeof (From);
 	struct passwd *pwd = NULL;
 	char	errorstr[MAXSTR];
 	int	s = fileno(stdin);
@@ -309,91 +310,31 @@ WhoAreYou()
 			IssueMessage(LOG_ERR, "WhoAreYou: getlogin() || getpwuid() failed for uid %d\n", uid);
 			exit(1);
 		}
-	} else if (getpeername(s, &From, &FromLen) == 0)
+	} else if (getpeername(s, (struct sockaddr *) &From, &FromLen) == 0)
 	{
-		struct sockaddr_in *sin = (struct sockaddr_in *) (&From);
-		struct hostent *hp = NULL;
 		int	on = 1;
-		int     hostnamep = 0;
-
+		int	hostnamep = 0;
+		char	hostbuf[NI_MAXHOST];
 
 		InputType = IT_NET;
-		/* get name of connected client */
-		hp = gethostbyaddr((char *)&sin->sin_addr, sizeof (sin->sin_addr), AF_INET);
 
-
-		if (hp) {
-			/*
-			 * Attempt to verify that we haven't been fooled by
-			 * someone in a remote net; look up the name and check
-			 * that this address corresponds to the name.
-			 */
-
-			int	HostNameLen = strlen (hp->h_name);
-			char	remotehost[2 * MAXHOSTNAMELEN + 1];
-
-			hostnamep = 1;
-			hostname = strdup(hp->h_name);
-			strncpy(remotehost, hp->h_name, sizeof(remotehost) - 1);
-			remotehost[sizeof(remotehost) - 1] = 0;
-			hp = gethostbyname(remotehost);
-			if (hp == NULL) {
-				(void) sprintf(errorstr, "Couldn't look up address for %s", remotehost);
-				DoReply(LR_NOADDR, errorstr);
-				IssueMessage(LOG_NOTICE, errorstr);
-				DoQuit(NULL);
-			} else for (; ; hp->h_addr_list++) {
-				if (hp->h_addr_list[0] == NULL) {
-					(void) sprintf(errorstr,
-					    "Host addr %s not listed for host %s",
-#if defined(sparc) && __GNUC__ == 1
-					    inet_ntoa(&sin->sin_addr),
-#else
-					    inet_ntoa(sin->sin_addr),
-#endif
-					    hp->h_name);
-					DoReply(LR_MISMATCH, errorstr);
-					IssueMessage(LOG_NOTICE, errorstr);
-					DoQuit(NULL);
-				}
-				if (!memcmp(hp->h_addr_list[0], (void *)&sin->sin_addr,
-				    sizeof(sin->sin_addr))) {
-					hostname = strdup(hp->h_name);
-					break;
-				}
-			}
+		/* Prefer numeric host to avoid fragile reverse-DNS pointer paths. */
+		if (getnameinfo((struct sockaddr *) &From, FromLen, hostbuf, sizeof(hostbuf),
+		    NULL, 0, NI_NUMERICHOST) == 0) {
+			hostname = strdup(hostbuf);
 		} else {
-#if defined(sparc) && __GNUC__ == 1
-			hostname = strdup((char *) inet_ntoa(&sin->sin_addr));
-#else
-			hostname = strdup((char *) inet_ntoa(sin->sin_addr));
-#endif
-			IssueMessage(LOG_NOTICE, "Couldn't find hostname for address (%s)",
-			    hostname);
-#ifndef NOCHECKNET
-			DoReply(LR_NONAME, "No hostname found for IP address");
-			/* DoQuit(NULL);	How rude do we need to be? */
-#endif /* !NOCHECKNET */
+			hostname = strdup("unknown");
 		}
+
+		/* Optionally resolve a hostname for local/off-campus domain checks. */
+		if (getnameinfo((struct sockaddr *) &From, FromLen, hostbuf, sizeof(hostbuf),
+		    NULL, 0, NI_NAMEREQD) == 0) {
+			hostnamep = 1;
+		}
+
 		(void) sprintf(Foreign, "NET %s", hostname);
 #ifdef EMAIL_AUTH
 		memset(&TrustHp, 0, sizeof (TrustHp));
-		if (hp != NULL && ntohs(sin->sin_port) < IPPORT_RESERVED)
-		{
-			TrustHp.h_addrtype = hp->h_addrtype;
-			TrustHp.h_length = hp->h_length;
-			TrustHp.h_name = strdup(hp->h_name);
-			TrustHp.h_aliases = malloc(35 * sizeof (char *));
-			for (i = 0; *(hp->h_aliases+i); i++)
-				*(TrustHp.h_aliases+i) = strdup(*(hp->h_aliases+i));
-			TrustHp.h_addr_list = malloc(35 * sizeof (char *));
-			for (i = 0; *(hp->h_addr_list+i); i++)
-			{
-				*(TrustHp.h_addr_list+i) = malloc(hp->h_length);
-				memcpy(*(TrustHp.h_addr_list+i),
-					*(hp->h_addr_list+i), hp->h_length);
-			}
-		}
 #endif
 
 		if (*OkAddrs)
