@@ -56,6 +56,48 @@ Reload:
 sudo systemctl restart openbsd-inetd
 ```
 
+## systemd Socket Activation (Alternative)
+
+If you already use `openbsd-inetd` for other services, keep it enabled and run CCSO with a dedicated `systemd` socket.
+
+`/etc/systemd/system/ccso.socket`:
+
+```ini
+[Unit]
+Description=CCSO Nameserver Socket
+
+[Socket]
+ListenStream=105
+Accept=yes
+
+[Install]
+WantedBy=sockets.target
+```
+
+`/etc/systemd/system/ccso@.service`:
+
+```ini
+[Unit]
+Description=CCSO Nameserver Service (%i)
+
+[Service]
+ExecStart=/opt/nameserv/bin/qi -q
+StandardInput=socket
+StandardOutput=socket
+StandardError=journal
+User=nameserv
+Group=nameserv
+WorkingDirectory=/opt/nameserv
+```
+
+Create the service account and enable:
+
+```bash
+sudo useradd --system --home /opt/nameserv --shell /usr/sbin/nologin --no-create-home nameserv || true
+sudo systemctl daemon-reload
+sudo systemctl enable --now ccso.socket
+```
+
 ## Gopher Type 2 Link
 
 Example selector line:
