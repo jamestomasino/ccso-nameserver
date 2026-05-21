@@ -114,10 +114,12 @@ Example selector line:
 
 ## Data Pipeline
 
-Generate normalized markdown from Goodreads CSV (defaults to `.local/books-markdown`, ignored by git):
+Generate normalized markdown from Goodreads export (CSV, `review.zip`, or `review.json`; defaults to `.local/books-markdown`, ignored by git):
 
 ```bash
 python3 scripts/goodreads_to_markdown.py "/path/to/goodreads_library_export.csv"
+# or the newer privacy export artifact:
+python3 scripts/goodreads_to_markdown.py "~/Downloads/review.zip"
 ```
 
 Generate CCSO seed data from markdown files (defaults to `~/sync/syncthing/wiki/books`):
